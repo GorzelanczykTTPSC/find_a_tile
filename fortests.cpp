@@ -87,19 +87,19 @@ int main(int argc, char *argv[]) {
     // std::cout << "Coords: " << found_x << " " << found_y << std::endl;
 
 
-    cv::rectangle(newImage, cv::Point(found_x, found_y), cv::Point(found_x+TILE_W, found_y+TILE_H), cv::Scalar(0,255,0));
+    // cv::rectangle(newImage, cv::Point(found_x, found_y), cv::Point(found_x+TILE_W, found_y+TILE_H), cv::Scalar(0,255,0));
 
     // distance == 0 gdy są identyczne
     // std::cout << "Distance between two random vectors: " << cv::norm(img.at<cv::Vec3b>(60,60), tile.at<cv::Vec3b>(40,10)) << std::endl;
 
 
    
-    imshow("Display window", newImage);
-    int k = cv::waitKey(0); // Wait for a keystroke in the window
-    if(k == 's')
-    {
-        imwrite("starry_night2.png", tile);
-    }
+    // imshow("Display window", newImage);
+    // int k = cv::waitKey(0); // Wait for a keystroke in the window
+    // if(k == 's')
+    // {
+    //     imwrite("starry_night2.png", tile);
+    // }
  
     return 0;
 
