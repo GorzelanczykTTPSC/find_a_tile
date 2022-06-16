@@ -29,12 +29,12 @@ def seq_par(filename):
     for i in range(10, 110, 10):
         print(i)
         
-        timeseq = getavg(2, ["./bin/FindTileSeq", filename, str(i), str(i), "400", "400"])
-        timepar = getavg(2, ["./bin/FindTilePar", filename, str(i), str(i), "400", "400"])
+        timeseq = getavg(2, ["./bin/FindTileSeq", filename, str(i), str(i), "400", "400", "1"])
+        timepar = getavg(2, ["./bin/FindTilePar", filename, str(i), str(i), "400", "400", "1"])
         f.write(f"{i+1}\t{timeseq}\t{timepar}\n")
 
     f.close()
 
 
 # threads_time("siema.jpg")
-seq_par("siema.jpg")
+seq_par("imgs/siema.jpg")

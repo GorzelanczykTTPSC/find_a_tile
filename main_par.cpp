@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     
     if (argc<6){
-        std::cout << "Usage: " << argv[0] << " <image> <fragment width> <fragmend height> <X fragment position> <Y fragmend position>" <<std::endl;
+        std::cout << "Usage: " << argv[0] << " <image> <fragment width> <fragmend height> <X fragment position> <Y fragmend position> [testrun]" <<std::endl;
         exit(1);
     }
 
@@ -51,6 +51,10 @@ int main(int argc, char *argv[]) {
     int TILE_H = atoi(argv[3]);
     int TILE_X = atoi(argv[4]);
     int TILE_Y = atoi(argv[5]);
+    bool testrun = false;
+    if (argc>6) {
+        testrun = atoi(argv[6])==1?true:false;
+    }
     
     std::string imp = cv::samples::findFile(argv[1]);
     cv::Mat img = cv::imread(imp, cv::IMREAD_COLOR);
@@ -59,8 +63,6 @@ int main(int argc, char *argv[]) {
         std::cout<< "Invalid position or size!" << std::endl;
         exit(0);
     }
-
-    cv::Mat half = img(cv::Rect(0,0,300,300));
 
     cv::Mat newImage(img.rows, img.cols, CV_8UC3, cv::Scalar(0,0,0));
 
@@ -79,7 +81,6 @@ int main(int argc, char *argv[]) {
 
     auto start_time = std::chrono::high_resolution_clock::now();
 
-
     double max_sum = 0;
     int found_x = -1;
     int found_y = -1;
@@ -97,14 +98,13 @@ int main(int argc, char *argv[]) {
                 for (int l=0;l<TILE_H;l++) {
 
                     double val = -1*(int)euclideanDistance(img.at<cv::Vec3b>(i+k,j+l), tile.at<cv::Vec3b>(k, l))+442;
-                    //if (val!=0) std::cout << val << std::endl;
                     sum += val/(TILE_W*TILE_H);
 
                 }
             }
 
             if (sum>max_sum) {
-                max_sum=sum; //std::cout<<"Max sum: " << max_sum << std::endl;
+                max_sum=sum;
                 found_x = i;
                 found_y = j;
             }
@@ -118,6 +118,10 @@ int main(int argc, char *argv[]) {
 
     auto end_time = std::chrono::high_resolution_clock::now();
 
+    if (testrun) {
+        std::cout << (end_time-start_time)/std::chrono::milliseconds(1);
+        return 0;
+    }
 
     std::cout << "Time: " << (end_time-start_time)/std::chrono::milliseconds(1) << " ms" << std::endl;
     std::cout << "Coords: " << found_x << " " << found_y << std::endl;
@@ -135,12 +139,11 @@ int main(int argc, char *argv[]) {
 
     imshow("Source image window", img);
 
-
     imshow("Display window", newImage);
     int k = cv::waitKey(0); // Wait for a keystroke in the window
     if(k == 's')
     {
-        imwrite("starry_night2.png", tile);
+        imwrite(std::string(argv[1])+"_out.png", newImage);
     }
     
     return 0;
