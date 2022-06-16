@@ -1,3 +1,0 @@
-/home/damian/Documents/Projects/Semestr6/RÓWNOLEGŁE/LAB/CMakeFiles/rebuild_cache.dir
-/home/damian/Documents/Projects/Semestr6/RÓWNOLEGŁE/LAB/CMakeFiles/edit_cache.dir
-/home/damian/Documents/Projects/Semestr6/RÓWNOLEGŁE/LAB/CMakeFiles/DisplayImage.dir
