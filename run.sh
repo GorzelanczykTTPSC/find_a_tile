@@ -1,4 +1,4 @@
 #!/bin/bash
 cmake .
 make
-./DisplayImage
+./bin/DisplayImage
