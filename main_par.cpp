@@ -9,9 +9,6 @@
 #include <chrono>
 #include <cstdlib>
 
-
-
-
 double euclideanDistance(cv::Vec3b& v1, cv::Vec3b& v2) {
 
     return sqrt((v1[0]-v2[0])*(v1[0]-v2[0])
