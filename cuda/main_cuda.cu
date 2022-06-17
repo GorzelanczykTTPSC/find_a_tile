@@ -127,7 +127,12 @@ int main(int argc, char** argv) {
     cudaEventRecord( stop, 0 );
     cudaEventSynchronize( stop );
     cudaEventElapsedTime( &time, start, stop );
+    if (testrun){
+        std::cout<< time;
+    }
+    else{
     std::cout << "Exec time: " << time << " ms" << std::endl;
+    }
 
     // Copy result back to host
     //cudaMemcpy(host_c, d_c, size, cudaMemcpyDeviceToHost);
