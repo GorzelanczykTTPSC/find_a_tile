@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     int TILE_Y = atoi(argv[5]);
     bool testrun = false;
     if (argc>6) {
-        testrun = atoi(argv[6])==1?true:false;
+        testrun = atoi(argv[6])==1;
     }
     
     std::string imp = cv::samples::findFile(argv[1]);
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    cv::Mat newImage(img.rows, img.cols, CV_8UC3, cv::Scalar(0,0,0));
+    cv::Mat newImage(img.rows-TILE_H, img.cols-TILE_W, CV_8UC3, cv::Scalar(0,0,0));
 
     if (img.empty()) {
         std::cout << "Could not read the image: " << imp << std::endl;
@@ -144,6 +144,7 @@ int main(int argc, char *argv[]) {
     if(k == 's')
     {
         imwrite(std::string(argv[1])+"_out.png", newImage);
+        imwrite(std::string(argv[1])+"_out2.png", img);
     }
     
     return 0;
