@@ -1,15 +1,3 @@
-/**
- * @brief      Basic addition.
- *
- *             Here we do basic addition of two integers in a kernel for the
- *             GPU. For doing our first computation, we need to allocate and
- *             afterwards free  memory on the GPU. The syntax to do this is very
- *             similar to what we use in C or C++. Then, to be able to do
- *             multiple additions in parallel, we need to define the number of
- *             threads and blocks.
- *
- *             From: http://www.nvidia.com/docs/io/116711/sc11-cuda-c-basics.pdf
- */
 #include <iostream>
 #include <string>
 //#include "opencv2/gpu/gpu.hpp"
@@ -33,44 +21,52 @@ __device__ __forceinline__ uchar euclidean_distance(cv::cuda::PtrStepSz<uchar>v1
         +(v1[2]-v2[2])*(v1[2]-v2[2]));
 }
 
-__global__ void euclidDistance(cv::cuda::PtrStepSz<uchar>img, cv::cuda::PtrStepSz<uchar>tile, cv::cuda::PtrStepSz<uchar>out) {
+__global__ void euclidDistance(cv::cuda::PtrStepSz<uchar3>img, cv::cuda::PtrStepSz<uchar3>tile, cv::cuda::PtrStepSz<uchar3>out) {
 
-    int y = threadIdx.x; // row
-    int x = blockIdx.x; // column
+    //int y = threadIdx.x; // row
+    //int x = blockIdx.x; // column
+    unsigned int row = blockIdx.y * blockDim.y + threadIdx.y;
+    unsigned int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    int sum = 0;
+    double sum = 0;
     
     for (int i=0;i<TW;i++) {
         for (int j=0;j<TH;j++) {
-            int R_diff = abs(img.ptr(y+j)[(x+i)*3+2]-tile.ptr(j)[i*3+2]);
-            int G_diff = abs(img.ptr(y+j)[(x+i)*3+1]-tile.ptr(j)[i*3+1]);
-            int B_diff = abs(img.ptr(y+j)[(x+i)*3]-tile.ptr(j)[i*3]);
+            uchar3 pix = img(row+j, col+i);
+            uchar3 tilepix = tile(j, i);
+            float R_diff = (float)(pix.z-tilepix.z);
+            float G_diff = (float)(pix.y-tilepix.y);
+            float B_diff = (float)(pix.x-tilepix.x);
 
-            sum += (-1*(sqrtf(R_diff*R_diff+G_diff*G_diff+B_diff*B_diff))+442)/(TW*TH);
+            sum += (-1*(sqrtf(R_diff*R_diff+G_diff*G_diff+B_diff*B_diff))+442)/(TW*TH); // R_diff+G_diff+B_diff<5?1:0;
 
         }
     }
     
-    
-
-    out.ptr(y)[x*3+2] = 0;//img.ptr(y)[x*3+2];//0;
-    out.ptr(y)[x*3+1] = sum/442<=0.5 ? 255 : 255-int((sum/442)-0.5)*2*255;
-    out.ptr(y)[x*3] = sum/442<=0.5 ? int((sum/442)*2*255) : 255;
+    out(row, col).x = 0;//img.ptr(y)[x*3+2];//0;
+    out(row, col).y = sum/442.0<=0.5 ? 255 : 255-int((sum/442.0)-0.5)*2*255;
+    out(row, col).z = sum/442.0<=0.5 ? int((sum/442.0)*2*255) : 255; // sum/10;
 
     //__syncthreads();
 }
 
 int main(int argc, char** argv) {
 
-    // Declare copies on host and device
-    //int *host_a, *host_b, *host_c; 
-    //int *d_a, *d_b, *d_c;
-    //int size = N * sizeof(int);
+    if (argc<6){
+        std::cout << "Usage: " << argv[0] << " <image> <fragment width> <fragmend height> <X fragment position> <Y fragmend position> [testrun]" <<std::endl;
+        exit(1);
+    }
 
-    int TILE_W = 50; //atoi(argv[2]);
-    int TILE_H = 50; //atoi(argv[3]);
-    int TILE_X = 50; //atoi(argv[4]);
-    int TILE_Y = 50; //atoi(argv[5]);
+    int TILE_W = atoi(argv[2]);
+    int TILE_H = atoi(argv[3]);
+    int TILE_X = atoi(argv[4]);
+    int TILE_Y = atoi(argv[5]);
+    bool testrun = false;
+
+    if (argc>6) {
+        testrun = atoi(argv[6])==1?true:false;
+    }
+
 
     // Allocate space for device copies of a, b, c
     //cudaMalloc((void **)&d_a, size);
@@ -123,7 +119,10 @@ int main(int argc, char** argv) {
     //euclidDistance<<<(N+M-1)/M, M>>>(d_a, d_b, d_c);
     // M - total number of blocks - s.width
     // N - total number of threads in a block - s.height
-    euclidDistance<<<M, N>>>(img_device, tile_device, out_device);
+    // M, N
+    dim3 Threads(32, 16);
+    dim3 Blocks((newImage.cols + Threads.x - 1)/Threads.x, (newImage.rows + Threads.y - 1)/Threads.y);
+    euclidDistance<<<Blocks, Threads>>>(img_device, tile_device, out_device);
 
     cudaEventRecord( stop, 0 );
     cudaEventSynchronize( stop );
@@ -137,18 +136,7 @@ int main(int argc, char** argv) {
     imwrite("tile.png", tile);
     imwrite("result.png", resultHost);
 
-    // Output
-    std::cout << "Massively parallel szukanie wzorca." << std::endl;
-    /*
-    std::cout << "Displaying first 10 out of " << N << " results: " << std::endl;
-    for (int i = 0; i < 10; ++i)	{
-        std::cout << host_a[i] << + " + " << host_b[i] << " = " << host_c[i] << std::endl;
-    }
-    */
 
-    // Cleanup
-    //free(host_a); free(host_b); free(host_c);
-    //cudaFree(d_a); cudaFree(d_b); cudaFree(d_c);
 
     return 0;
 

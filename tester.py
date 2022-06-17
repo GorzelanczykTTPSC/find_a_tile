@@ -22,7 +22,7 @@ def threads_time(filename):
 
     f.close()
 
-def seq_par(filename):
+def seq_par(filename, run):
     os.environ['OMP_NUM_THREADS'] = "16"
     f = open("seq_par.txt", "w")
     f.write(f"threads\tsequential[ms]\tparalel[ms]\n")
@@ -36,5 +36,19 @@ def seq_par(filename):
     f.close()
 
 
-# threads_time("siema.jpg")
-seq_par("imgs/siema.jpg")
+def cuda_omp(filename):
+    os.environ['OMP_NUM_THREADS'] = "16"
+    f = open("seq_par.txt", "w")
+    f.write(f"threads\ttime[ms]\n")
+    for i in range(10, 110, 10):
+        print(i)
+        
+        timecuda = getavg(2, ["./cuda/build/bin/main", filename, str(i), str(i), "400", "400", "1"])
+       
+        f.write(f"{i+1}\t{timecuda}\n")
+
+    f.close()
+
+# threads_time("duck.jpg")
+# seq_par("imgs/duck.jpg")
+cuda_omp("imgs/duck.jpg")
