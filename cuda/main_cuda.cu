@@ -39,7 +39,6 @@ __global__ void euclidDistance(cv::cuda::PtrStepSz<uchar>img, cv::cuda::PtrStepS
     int x = blockIdx.x; // column
 
     int sum = 0;
-
     
     for (int i=0;i<TW;i++) {
         for (int j=0;j<TH;j++) {
@@ -52,27 +51,14 @@ __global__ void euclidDistance(cv::cuda::PtrStepSz<uchar>img, cv::cuda::PtrStepS
         }
     }
     
+    
 
     out.ptr(y)[x*3+2] = 0;//img.ptr(y)[x*3+2];//0;
     out.ptr(y)[x*3+1] = sum/442<=0.5 ? 255 : 255-int((sum/442)-0.5)*2*255;
-    out.ptr(y)[x*3] = 0;//img.ptr(y)[x*3];//128;//sum/442<=0.5 ? int((sum/442)*2*255) : 255;
+    out.ptr(y)[x*3] = sum/442<=0.5 ? int((sum/442)*2*255) : 255;
 
-    __syncthreads();
+    //__syncthreads();
 }
-
-/**
- * @brief      Kernel for basic addition.
- *
- * @param      a     Input integer 1
- * @param      b     Input integer 2
- * @param      c     Output integer
- */
-//__global__ void add(int *a, int *b, int *c) {
-//    int i = threadIdx.x + blockIdx.x * blockDim.x;
-//    if (i < N) {
-//        c[i] = a[i] + b[i];
-//    }
-//}
 
 int main(int argc, char** argv) {
 
@@ -90,6 +76,11 @@ int main(int argc, char** argv) {
     //cudaMalloc((void **)&d_a, size);
     //cudaMalloc((void **)&d_b, size);
     //cudaMalloc((void **)&d_c, size);
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    float time;
 
     std::string imp = cv::samples::findFile(argv[1]);
 
@@ -126,11 +117,18 @@ int main(int argc, char** argv) {
     tile_device.upload(tile);
     out_device.upload(newImage);
 
+    cudaEventRecord( start, 0 );
+
     // Launch add() kernel on GPU
     //euclidDistance<<<(N+M-1)/M, M>>>(d_a, d_b, d_c);
     // M - total number of blocks - s.width
     // N - total number of threads in a block - s.height
     euclidDistance<<<M, N>>>(img_device, tile_device, out_device);
+
+    cudaEventRecord( stop, 0 );
+    cudaEventSynchronize( stop );
+    cudaEventElapsedTime( &time, start, stop );
+    std::cout << "Exec time: " << time << " ms" << std::endl;
 
     // Copy result back to host
     //cudaMemcpy(host_c, d_c, size, cudaMemcpyDeviceToHost);
